@@ -80,6 +80,10 @@ pub struct WorkspaceSettingsContent {
     ///
     /// Default: true
     pub use_system_prompts: Option<bool>,
+    /// The language to use for Zed's built-in UI strings.
+    ///
+    /// Default: system
+    pub ui_language: Option<UiLanguage>,
     /// Aliases for the command palette. When you type a key in this map,
     /// it will be assumed to equal the value.
     ///
@@ -374,6 +378,27 @@ impl CloseWindowWhenNoItems {
             CloseWindowWhenNoItems::KeepWindowOpen => false,
         }
     }
+}
+
+#[derive(
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    Default,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    MergeFrom,
+    Debug,
+    strum::VariantArray,
+    strum::VariantNames,
+)]
+#[serde(rename_all = "kebab-case")]
+pub enum UiLanguage {
+    #[default]
+    System,
+    ZhCn,
 }
 
 #[derive(

@@ -715,6 +715,30 @@ List of `string` values
 
 `boolean` values
 
+## UI Language
+
+- Description: The language to use for Zed's built-in UI strings.
+- Setting: `ui_language`
+- Default: `"system"`
+
+**Options**
+
+1. Use the app default language:
+
+```json [settings]
+{
+  "ui_language": "system"
+}
+```
+
+2. Use Simplified Chinese for supported built-in UI:
+
+```json [settings]
+{
+  "ui_language": "zh-CN"
+}
+```
+
 ## Cursor Shape
 
 - Description: Cursor shape for the default editor.

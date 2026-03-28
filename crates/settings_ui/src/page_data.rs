@@ -81,7 +81,7 @@ pub(crate) fn settings_data(cx: &App) -> Vec<SettingsPage> {
 }
 
 fn general_page() -> SettingsPage {
-    fn general_settings_section() -> [SettingsPageItem; 8] {
+    fn general_settings_section() -> [SettingsPageItem; 9] {
         [
             SettingsPageItem::SectionHeader("General Settings"),
             SettingsPageItem::SettingItem(SettingItem {
@@ -164,6 +164,19 @@ fn general_page() -> SettingsPage {
                     pick: |settings_content| settings_content.workspace.use_system_prompts.as_ref(),
                     write: |settings_content, value| {
                         settings_content.workspace.use_system_prompts = value;
+                    },
+                }),
+                metadata: None,
+                files: USER,
+            }),
+            SettingsPageItem::SettingItem(SettingItem {
+                title: "UI Language",
+                description: "The language to use for Zed's built-in UI strings.",
+                field: Box::new(SettingField {
+                    json_path: Some("ui_language"),
+                    pick: |settings_content| settings_content.workspace.ui_language.as_ref(),
+                    write: |settings_content, value| {
+                        settings_content.workspace.ui_language = value;
                     },
                 }),
                 metadata: None,

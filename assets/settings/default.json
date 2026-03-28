@@ -202,6 +202,13 @@
   // When set to false, Zed will use its built-in prompts. Note that on Linux,
   // this option is ignored and Zed will always use the built-in prompts.
   "use_system_prompts": true,
+  // The language to use for Zed's built-in UI strings.
+  //
+  // 1. Follow the default built into the app:
+  //    "system"
+  // 2. Use Simplified Chinese for supported built-in UI:
+  //    "zh-CN"
+  "ui_language": "system",
   // Whether the cursor blinks in the editor.
   "cursor_blink": true,
   // Cursor shape for the default editor.

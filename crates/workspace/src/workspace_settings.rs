@@ -6,7 +6,7 @@ use serde::Deserialize;
 pub use settings::{
     AutosaveSetting, BottomDockLayout, EncodingDisplayOptions, InactiveOpacity,
     PaneSplitDirectionHorizontal, PaneSplitDirectionVertical, RegisterSetting,
-    RestoreOnStartupBehavior, Settings,
+    RestoreOnStartupBehavior, Settings, UiLanguage,
 };
 
 #[derive(RegisterSetting)]
@@ -24,6 +24,7 @@ pub struct WorkspaceSettings {
     pub drop_target_size: f32,
     pub use_system_path_prompts: bool,
     pub use_system_prompts: bool,
+    pub ui_language: settings::UiLanguage,
     pub command_aliases: HashMap<String, String>,
     pub max_tabs: Option<NonZeroUsize>,
     pub when_closing_with_no_tabs: settings::CloseWindowWhenNoItems,
@@ -96,6 +97,7 @@ impl Settings for WorkspaceSettings {
             drop_target_size: workspace.drop_target_size.unwrap(),
             use_system_path_prompts: workspace.use_system_path_prompts.unwrap(),
             use_system_prompts: workspace.use_system_prompts.unwrap(),
+            ui_language: workspace.ui_language.unwrap(),
             command_aliases: workspace.command_aliases.clone(),
             max_tabs: workspace.max_tabs,
             when_closing_with_no_tabs: workspace.when_closing_with_no_tabs.unwrap(),
