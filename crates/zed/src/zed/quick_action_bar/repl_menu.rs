@@ -12,6 +12,12 @@ use ui::{
     PopoverMenu, PopoverMenuHandle, Tooltip, prelude::*,
 };
 use util::ResultExt;
+use settings::Settings;
+use workspace::{WorkspaceSettings, localized_string};
+
+fn t(cx: &gpui::App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 
 use super::QuickActionBar;
 
@@ -92,6 +98,7 @@ impl QuickActionBar {
                     let menu_state = session_state(session, cx);
                     let status = menu_state.status;
                     let editor = editor.clone();
+                    let language = WorkspaceSettings::get_global(cx).ui_language;
 
                     menu.map(|menu| {
                         if status.is_connected() {
@@ -134,9 +141,9 @@ impl QuickActionBar {
                     .custom_entry(
                         move |_window, _cx| {
                             Label::new(if has_nonempty_selection {
-                                "Run Selection"
+                                localized_string(language, "Run Selection")
                             } else {
-                                "Run Line"
+                                localized_string(language, "Run Line")
                             })
                             .into_any_element()
                         },
@@ -149,7 +156,7 @@ impl QuickActionBar {
                     )
                     .custom_entry(
                         move |_window, _cx| {
-                            Label::new("Interrupt")
+                            Label::new(localized_string(language, "Interrupt"))
                                 .size(LabelSize::Small)
                                 .color(Color::Error)
                                 .into_any_element()
@@ -163,7 +170,7 @@ impl QuickActionBar {
                     )
                     .custom_entry(
                         move |_window, _cx| {
-                            Label::new("Clear Outputs")
+                            Label::new(localized_string(language, "Clear Outputs"))
                                 .size(LabelSize::Small)
                                 .color(Color::Muted)
                                 .into_any_element()
@@ -178,7 +185,7 @@ impl QuickActionBar {
                     .separator()
                     .custom_entry(
                         move |_window, _cx| {
-                            Label::new("Shut Down Kernel")
+                            Label::new(localized_string(language, "Shut Down Kernel"))
                                 .size(LabelSize::Small)
                                 .color(Color::Error)
                                 .into_any_element()
@@ -192,7 +199,7 @@ impl QuickActionBar {
                     )
                     .custom_entry(
                         move |_window, _cx| {
-                            Label::new("Restart Kernel")
+                            Label::new(localized_string(language, "Restart Kernel"))
                                 .size(LabelSize::Small)
                                 .color(Color::Error)
                                 .into_any_element()
@@ -219,7 +226,7 @@ impl QuickActionBar {
                     )
                     .width(rems(1.))
                     .disabled(menu_state.popover_disabled),
-                Tooltip::text("REPL Menu"),
+                Tooltip::text(t(cx, "REPL Menu")),
             );
 
         let button = ButtonLike::new_rounded_left("toggle_repl_icon")
@@ -366,7 +373,7 @@ impl QuickActionBar {
                                 .size(IconSize::XSmall),
                         ),
                 ),
-            Tooltip::text("Select Kernel"),
+            Tooltip::text(t(cx, "Select Kernel")),
         )
         .with_handle(menu_handle)
         .into_any_element()

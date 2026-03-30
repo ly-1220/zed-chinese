@@ -47,8 +47,13 @@ use util::{
 };
 use workspace::{
     ModalView, OpenChannelNotesById, OpenOptions, OpenVisible, SplitDirection, Workspace,
-    item::PreviewTabsSettings, notifications::NotifyResultExt, pane,
+    WorkspaceSettings, item::PreviewTabsSettings, localized_string, notifications::NotifyResultExt,
+    pane,
 };
+
+fn t(cx: &App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 use zed_actions::search::ToggleIncludeIgnored;
 
 actions!(
@@ -1881,22 +1886,22 @@ impl PickerDelegate for FileFinderDelegate {
                                     move |window, cx| {
                                         Some(ContextMenu::build(window, cx, {
                                             let focus_handle = focus_handle.clone();
-                                            move |menu, _, _| {
+                                            move |menu, _, cx| {
                                                 menu.context(focus_handle)
                                                     .action(
-                                                        "Split Left",
+                                                        t(cx, "Split Left"),
                                                         pane::SplitLeft::default().boxed_clone(),
                                                     )
                                                     .action(
-                                                        "Split Right",
+                                                        t(cx, "Split Right"),
                                                         pane::SplitRight::default().boxed_clone(),
                                                     )
                                                     .action(
-                                                        "Split Up",
+                                                        t(cx, "Split Up"),
                                                         pane::SplitUp::default().boxed_clone(),
                                                     )
                                                     .action(
-                                                        "Split Down",
+                                                        t(cx, "Split Down"),
                                                         pane::SplitDown::default().boxed_clone(),
                                                     )
                                             }

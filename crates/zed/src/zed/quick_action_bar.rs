@@ -25,8 +25,13 @@ use ui::{
 use vim_mode_setting::{HelixModeSetting, VimModeSetting};
 use workspace::item::ItemBufferKind;
 use workspace::{
-    ToolbarItemEvent, ToolbarItemLocation, ToolbarItemView, Workspace, item::ItemHandle,
+    ToolbarItemEvent, ToolbarItemLocation, ToolbarItemView, Workspace, WorkspaceSettings,
+    item::ItemHandle, localized_string,
 };
+
+fn t(cx: &gpui::App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 use zed_actions::{agent::AddSelectionToThread, assistant::InlineAssist, outline::ToggleOutline};
 
 const MAX_CODE_ACTION_MENU_LINES: u32 = 16;
@@ -254,31 +259,31 @@ impl Render for QuickActionBar {
                         .icon_size(IconSize::Small)
                         .style(ButtonStyle::Subtle)
                         .toggle_state(self.toggle_selections_handle.is_deployed()),
-                    Tooltip::text("Selection Controls"),
+                    Tooltip::text(t(cx, "Selection Controls")),
                 )
                 .with_handle(self.toggle_selections_handle.clone())
                 .anchor(Corner::TopRight)
                 .menu(move |window, cx| {
                     let focus = focus.clone();
-                    let menu = ContextMenu::build(window, cx, move |menu, _, _| {
+                    let menu = ContextMenu::build(window, cx, move |menu, _, cx| {
                         menu.context(focus.clone())
-                            .action("Select All", Box::new(SelectAll))
+                            .action(t(cx, "Select All"), Box::new(SelectAll))
                             .action(
-                                "Select Next Occurrence",
+                                t(cx, "Select Next Occurrence"),
                                 Box::new(SelectNext {
                                     replace_newest: false,
                                 }),
                             )
-                            .action("Expand Selection", Box::new(SelectLargerSyntaxNode))
-                            .action("Shrink Selection", Box::new(SelectSmallerSyntaxNode))
+                            .action(t(cx, "Expand Selection"), Box::new(SelectLargerSyntaxNode))
+                            .action(t(cx, "Shrink Selection"), Box::new(SelectSmallerSyntaxNode))
                             .action(
-                                "Add Cursor Above",
+                                t(cx, "Add Cursor Above"),
                                 Box::new(AddSelectionAbove {
                                     skip_soft_wrap: true,
                                 }),
                             )
                             .action(
-                                "Add Cursor Below",
+                                t(cx, "Add Cursor Below"),
                                 Box::new(AddSelectionBelow {
                                     skip_soft_wrap: true,
                                 }),
@@ -286,30 +291,30 @@ impl Render for QuickActionBar {
                             .when(!disable_ai, |this| {
                                 this.separator().action_disabled_when(
                                     !has_selection,
-                                    "Add to Agent Thread",
+                                    t(cx, "Add to Agent Thread"),
                                     Box::new(AddSelectionToThread),
                                 )
                             })
                             .separator()
-                            .action("Go to Symbol", Box::new(ToggleOutline))
-                            .action("Go to Line/Column", Box::new(ToggleGoToLine))
+                            .action(t(cx, "Go to Symbol in Editor..."), Box::new(ToggleOutline))
+                            .action(t(cx, "Go to Line/Column..."), Box::new(ToggleGoToLine))
                             .separator()
-                            .action("Next Problem", Box::new(GoToDiagnostic::default()))
+                            .action(t(cx, "Next Problem"), Box::new(GoToDiagnostic::default()))
                             .action(
-                                "Previous Problem",
+                                t(cx, "Previous Problem"),
                                 Box::new(GoToPreviousDiagnostic::default()),
                             )
                             .separator()
-                            .action_disabled_when(!has_diff_hunks, "Next Hunk", Box::new(GoToHunk))
+                            .action_disabled_when(!has_diff_hunks, t(cx, "Next Hunk"), Box::new(GoToHunk))
                             .action_disabled_when(
                                 !has_diff_hunks,
-                                "Previous Hunk",
+                                t(cx, "Previous Hunk"),
                                 Box::new(GoToPreviousHunk),
                             )
                             .separator()
-                            .action("Move Line Up", Box::new(MoveLineUp))
-                            .action("Move Line Down", Box::new(MoveLineDown))
-                            .action("Duplicate Selection", Box::new(DuplicateLineDown))
+                            .action(t(cx, "Move Line Up"), Box::new(MoveLineUp))
+                            .action(t(cx, "Move Line Down"), Box::new(MoveLineDown))
+                            .action(t(cx, "Duplicate Selection"), Box::new(DuplicateLineDown))
                     });
                     Some(menu)
                 })
@@ -327,7 +332,7 @@ impl Render for QuickActionBar {
                         .icon_size(IconSize::Small)
                         .style(ButtonStyle::Subtle)
                         .toggle_state(self.toggle_settings_handle.is_deployed()),
-                    Tooltip::text("Editor Controls"),
+                    Tooltip::text(t(cx, "Editor Controls")),
                 )
                 .anchor(Corner::TopRight)
                 .with_handle(self.toggle_settings_handle.clone())

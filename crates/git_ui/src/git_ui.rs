@@ -22,8 +22,13 @@ use menu::{Cancel, Confirm};
 use project::git_store::Repository;
 use project_diff::ProjectDiff;
 use ui::prelude::*;
-use workspace::{ModalView, Workspace, notifications::DetachAndPromptErr};
+use settings::Settings;
+use workspace::{ModalView, Workspace, WorkspaceSettings, localized_string, notifications::DetachAndPromptErr};
 use zed_actions;
+
+fn t(cx: &App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 
 use crate::{git_panel::GitPanel, text_diff_view::TextDiffView};
 
@@ -641,19 +646,19 @@ mod remote_button {
                     ),
             )
             .menu(move |window, cx| {
-                Some(ContextMenu::build(window, cx, |context_menu, _, _| {
+                Some(ContextMenu::build(window, cx, |context_menu, _, cx| {
                     context_menu
                         .when_some(keybinding_target.clone(), |el, keybinding_target| {
                             el.context(keybinding_target)
                         })
-                        .action("Fetch", git::Fetch.boxed_clone())
-                        .action("Fetch From", git::FetchFrom.boxed_clone())
-                        .action("Pull", git::Pull.boxed_clone())
-                        .action("Pull (Rebase)", git::PullRebase.boxed_clone())
+                        .action(crate::t(cx, "Fetch"), git::Fetch.boxed_clone())
+                        .action(crate::t(cx, "Fetch From"), git::FetchFrom.boxed_clone())
+                        .action(crate::t(cx, "Pull"), git::Pull.boxed_clone())
+                        .action(crate::t(cx, "Pull (Rebase)"), git::PullRebase.boxed_clone())
                         .separator()
-                        .action("Push", git::Push.boxed_clone())
-                        .action("Push To", git::PushTo.boxed_clone())
-                        .action("Force Push", git::ForcePush.boxed_clone())
+                        .action(crate::t(cx, "Push"), git::Push.boxed_clone())
+                        .action(crate::t(cx, "Push To"), git::PushTo.boxed_clone())
+                        .action(crate::t(cx, "Force Push"), git::ForcePush.boxed_clone())
                 }))
             })
             .anchor(Corner::TopRight)

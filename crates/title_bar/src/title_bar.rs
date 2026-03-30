@@ -47,8 +47,13 @@ use ui::{
 use update_version::UpdateVersion;
 use util::ResultExt;
 use workspace::{
-    MultiWorkspace, ToggleWorktreeSecurity, Workspace, WorkspaceId, notifications::NotifyResultExt,
+    MultiWorkspace, ToggleWorktreeSecurity, Workspace, WorkspaceId, WorkspaceSettings,
+    localized_string, notifications::NotifyResultExt,
 };
+
+fn t(cx: &App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 use zed_actions::OpenRemote;
 
 pub use onboarding_banner::restore_banner;
@@ -714,7 +719,7 @@ impl TitleBar {
         let display_name = if let Some(ref name) = name {
             util::truncate_and_trailoff(name, MAX_PROJECT_NAME_LENGTH)
         } else {
-            "Open Recent Project".to_string()
+            t(cx, "Open Recent Project").to_string()
         };
 
         let is_sidebar_open = self
@@ -781,7 +786,7 @@ impl TitleBar {
                     .when(!is_project_selected, |s| s.color(Color::Muted)),
                 move |_window, cx| {
                     Tooltip::for_action(
-                        "Recent Projects",
+                        t(cx, "Recent Projects"),
                         &zed_actions::OpenRecent {
                             create_new_window: false,
                         },
@@ -844,7 +849,7 @@ impl TitleBar {
                     .when(!is_project_selected, |s| s.color(Color::Muted)),
                 move |_window, cx| {
                     Tooltip::for_action(
-                        "Recent Projects",
+                        t(cx, "Recent Projects"),
                         &zed_actions::OpenRecent {
                             create_new_window: false,
                         },
@@ -1147,8 +1152,9 @@ impl TitleBar {
                 let current_organization = current_organization.clone();
                 let organizations = organizations.clone();
                 let user_store = user_store.clone();
+                let language = WorkspaceSettings::get_global(cx).ui_language;
 
-                ContextMenu::build(window, cx, |menu, _, _cx| {
+                ContextMenu::build(window, cx, move |menu, _, _cx| {
                     menu.when(is_signed_in, |this| {
                         let user_login = user_login.clone();
                         this.custom_entry(
@@ -1175,7 +1181,7 @@ impl TitleBar {
                                     .w_full()
                                     .gap_1()
                                     .justify_between()
-                                    .child(Label::new("Restart to update Zed").color(Color::Accent))
+                                    .child(Label::new(localized_string(language, "Restart to update Zed")).color(Color::Accent))
                                     .child(
                                         Icon::new(IconName::Download)
                                             .size(IconSize::Small)
@@ -1241,23 +1247,23 @@ impl TitleBar {
 
                         this.separator()
                     })
-                    .action("Settings", zed_actions::OpenSettings.boxed_clone())
-                    .action("Keymap", Box::new(zed_actions::OpenKeymap))
+                    .action(localized_string(language, "Settings"), zed_actions::OpenSettings.boxed_clone())
+                    .action(localized_string(language, "Open Keymap"), Box::new(zed_actions::OpenKeymap))
                     .action(
-                        "Themes…",
+                        localized_string(language, "Select Theme..."),
                         zed_actions::theme_selector::Toggle::default().boxed_clone(),
                     )
                     .action(
-                        "Icon Themes…",
+                        localized_string(language, "Select Icon Theme..."),
                         zed_actions::icon_theme_selector::Toggle::default().boxed_clone(),
                     )
                     .action(
-                        "Extensions",
+                        localized_string(language, "Extensions"),
                         zed_actions::Extensions::default().boxed_clone(),
                     )
                     .when(is_signed_in, |this| {
                         this.separator()
-                            .action("Sign Out", client::SignOut.boxed_clone())
+                            .action(localized_string(language, "Sign Out"), client::SignOut.boxed_clone())
                     })
                 })
                 .into()

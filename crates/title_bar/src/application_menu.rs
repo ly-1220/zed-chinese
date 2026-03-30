@@ -6,8 +6,13 @@ use serde::Deserialize;
 
 use smallvec::SmallVec;
 use ui::{ContextMenu, PopoverMenu, PopoverMenuHandle, Tooltip, prelude::*};
+use workspace::{WorkspaceSettings, localized_string};
 
 use crate::title_bar_settings::TitleBarSettings;
+
+fn t(cx: &gpui::App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 
 actions!(
     app_menu,
@@ -168,7 +173,7 @@ impl ApplicationMenu {
                         )
                         .style(ButtonStyle::Subtle)
                         .icon_size(IconSize::Small),
-                        Tooltip::text("Open Application Menu"),
+                        move |window, cx| Tooltip::text(t(cx, "Open Application Menu"))(window, cx),
                     )
                     .with_handle(handle),
             )

@@ -66,12 +66,16 @@ use workspace::{
 };
 
 use workspace::{
-    Save, Toast, Workspace,
+    Save, Toast, Workspace, WorkspaceSettings, localized_string,
     item::{self, FollowableItem, Item},
     notifications::NotificationId,
     pane,
     searchable::{SearchEvent, SearchableItem},
 };
+
+fn t(cx: &App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 use zed_actions::agent::{AddSelectionToThread, PasteRaw, ToggleModelSelector};
 
 use crate::CycleFavoriteModels;
@@ -1193,7 +1197,7 @@ impl TextThreadEditor {
                             })
                             .children(match &message.status {
                                 MessageStatus::Error(error) => Some(
-                                    Button::new("show-error", "Error")
+                                    Button::new("show-error", t(cx, "Error"))
                                         .color(Color::Error)
                                         .selected_label_color(Color::Error)
                                         .start_icon(
@@ -1201,7 +1205,7 @@ impl TextThreadEditor {
                                                 .size(IconSize::XSmall)
                                                 .color(Color::Error),
                                         )
-                                        .tooltip(Tooltip::text("View Details"))
+                                        .tooltip(Tooltip::text(t(cx, "View Details")))
                                         .on_click({
                                             let text_thread = text_thread.clone();
                                             let error = error.clone();
@@ -2156,7 +2160,7 @@ impl TextThreadEditor {
         let (style, tooltip) = match token_state(&self.text_thread, cx) {
             Some(TokenState::NoTokensLeft { .. }) => (
                 ButtonStyle::Tinted(TintColor::Error),
-                Some(Tooltip::text("Token limit reached")(window, cx)),
+                Some(Tooltip::text(t(cx, "Token limit reached"))(window, cx)),
             ),
             Some(TokenState::HasMoreTokens {
                 over_warn_threshold,
@@ -2165,7 +2169,7 @@ impl TextThreadEditor {
                 let (style, tooltip) = if over_warn_threshold {
                     (
                         ButtonStyle::Tinted(TintColor::Warning),
-                        Some(Tooltip::text("Token limit is close to exhaustion")(
+                        Some(Tooltip::text(t(cx, "Token limit is close to exhaustion"))(
                             window, cx,
                         )),
                     )

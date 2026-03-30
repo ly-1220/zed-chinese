@@ -7,15 +7,20 @@ use crate::{
     selections_collection::SelectionsCollection,
 };
 use gpui::prelude::FluentBuilder;
-use gpui::{Context, DismissEvent, Entity, Focusable as _, Pixels, Point, Subscription, Window};
+use gpui::{App, Context, DismissEvent, Entity, Focusable as _, Pixels, Point, Subscription, Window};
 use project::DisableAiSettings;
+use settings::Settings;
 use std::ops::Range;
 use text::PointUtf16;
-use workspace::OpenInTerminal;
+use workspace::{OpenInTerminal, WorkspaceSettings, localized_string};
 use zed_actions::agent::AddSelectionToThread;
 use zed_actions::preview::{
     markdown::OpenPreview as OpenMarkdownPreview, svg::OpenPreview as OpenSvgPreview,
 };
+
+fn t(cx: &App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 
 #[derive(Debug)]
 pub enum MenuPosition {
@@ -241,73 +246,79 @@ pub fn deploy_context_menu(
                     .is_some_and(|ext| ext.eq_ignore_ascii_case("svg"))
             });
 
-        ui::ContextMenu::build(window, cx, |menu, _window, _cx| {
+        ui::ContextMenu::build(window, cx, |menu, _window, cx| {
             let builder = menu
                 .on_blur_subscription(Subscription::new(|| {}))
                 .when(run_to_cursor, |builder| {
-                    builder.action("Run to Cursor", Box::new(RunToCursor))
+                    builder.action(t(cx, "Run to Cursor"), Box::new(RunToCursor))
                 })
                 .when(evaluate_selection && has_selections, |builder| {
-                    builder.action("Evaluate Selection", Box::new(EvaluateSelectedText))
+                    builder.action(t(cx, "Evaluate Selection"), Box::new(EvaluateSelectedText))
                 })
                 .when(
                     run_to_cursor || (evaluate_selection && has_selections),
                     |builder| builder.separator(),
                 )
-                .action("Go to Definition", Box::new(GoToDefinition))
-                .action("Go to Declaration", Box::new(GoToDeclaration))
-                .action("Go to Type Definition", Box::new(GoToTypeDefinition))
-                .action("Go to Implementation", Box::new(GoToImplementation))
+                .action(t(cx, "Go to Definition"), Box::new(GoToDefinition))
+                .action(t(cx, "Go to Declaration"), Box::new(GoToDeclaration))
+                .action(t(cx, "Go to Type Definition"), Box::new(GoToTypeDefinition))
+                .action(t(cx, "Go to Implementation"), Box::new(GoToImplementation))
                 .action(
-                    "Find All References",
+                    t(cx, "Find All References"),
                     Box::new(FindAllReferences::default()),
                 )
                 .separator()
-                .action("Rename Symbol", Box::new(Rename))
-                .action("Format Buffer", Box::new(Format))
-                .when(has_selections, |cx| {
-                    cx.action("Format Selections", Box::new(FormatSelections))
+                .action(t(cx, "Rename Symbol"), Box::new(Rename))
+                .action(t(cx, "Format Buffer"), Box::new(Format))
+                .when(has_selections, |menu| {
+                    menu.action(t(cx, "Format Selections"), Box::new(FormatSelections))
                 })
                 .action(
-                    "Show Code Actions",
+                    t(cx, "Show Code Actions"),
                     Box::new(ToggleCodeActions {
                         deployed_from: None,
                         quick_launch: false,
                     }),
                 )
                 .when(!disable_ai && has_selections, |this| {
-                    this.action("Add to Agent Thread", Box::new(AddSelectionToThread))
+                    this.action(t(cx, "Add to Agent Thread"), Box::new(AddSelectionToThread))
                 })
                 .separator()
-                .action("Cut", Box::new(Cut))
-                .action("Copy", Box::new(Copy))
-                .action("Copy and Trim", Box::new(CopyAndTrim))
-                .action("Paste", Box::new(Paste))
+                .action(t(cx, "Cut"), Box::new(Cut))
+                .action(t(cx, "Copy"), Box::new(Copy))
+                .action(t(cx, "Copy and Trim"), Box::new(CopyAndTrim))
+                .action(t(cx, "Paste"), Box::new(Paste))
                 .separator()
                 .action_disabled_when(
                     !has_reveal_target,
-                    ui::utils::reveal_in_file_manager_label(false),
+                    if cfg!(target_os = "macos") {
+                        t(cx, "Reveal in Finder")
+                    } else if cfg!(target_os = "windows") {
+                        t(cx, "Reveal in File Explorer")
+                    } else {
+                        t(cx, "Reveal in File Manager")
+                    },
                     Box::new(RevealInFileManager),
                 )
                 .when(is_markdown, |builder| {
-                    builder.action("Open Markdown Preview", Box::new(OpenMarkdownPreview))
+                    builder.action(t(cx, "Open Markdown Preview"), Box::new(OpenMarkdownPreview))
                 })
                 .when(is_svg, |builder| {
-                    builder.action("Open SVG Preview", Box::new(OpenSvgPreview))
+                    builder.action(t(cx, "Open SVG Preview"), Box::new(OpenSvgPreview))
                 })
                 .action_disabled_when(
                     !has_reveal_target,
-                    "Open in Terminal",
+                    t(cx, "Open in Terminal"),
                     Box::new(OpenInTerminal),
                 )
                 .action_disabled_when(
                     !has_git_repo,
-                    "Copy Permalink",
+                    t(cx, "Copy Permalink"),
                     Box::new(CopyPermalinkToLine),
                 )
                 .action_disabled_when(
                     !has_git_repo,
-                    "View File History",
+                    t(cx, "View File History"),
                     Box::new(git::FileHistory),
                 );
             match focus {

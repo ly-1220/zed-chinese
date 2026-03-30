@@ -38,8 +38,12 @@ use util::path_list::PathList;
 use workspace::{
     AddFolderToProject, FocusWorkspaceSidebar, MultiWorkspace, MultiWorkspaceEvent, Open,
     Sidebar as WorkspaceSidebar, SidebarSide, ToggleWorkspaceSidebar, Workspace, WorkspaceId,
-    sidebar_side_context_menu,
+    WorkspaceSettings, localized_string, sidebar_side_context_menu,
 };
+
+fn t(cx: &App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 
 use zed_actions::OpenRecent;
 use zed_actions::editor::{MoveDown, MoveUp};
@@ -1279,7 +1283,7 @@ impl Sidebar {
                             )
                             .icon_size(IconSize::Small)
                             .icon_color(Color::Muted)
-                            .tooltip(Tooltip::text("Collapse Displayed Threads"))
+                            .tooltip(Tooltip::text(t(cx, "Collapse Displayed Threads")))
                             .on_click(cx.listener({
                                 let path_list_for_collapse = path_list_for_collapse.clone();
                                 move |this, _, _window, cx| {
@@ -1300,7 +1304,7 @@ impl Sidebar {
                             )
                             .icon_size(IconSize::Small)
                             .icon_color(Color::Muted)
-                            .tooltip(Tooltip::text("Activate Workspace"))
+                            .tooltip(Tooltip::text(t(cx, "Activate Workspace")))
                             .on_click(cx.listener({
                                 move |this, _, window, cx| {
                                     this.focused_thread = None;
@@ -1329,7 +1333,7 @@ impl Sidebar {
                             )
                             .icon_size(IconSize::Small)
                             .icon_color(Color::Muted)
-                            .tooltip(Tooltip::text("New Thread"))
+                            .tooltip(Tooltip::text(t(cx, "New Thread")))
                             .on_click(cx.listener({
                                 let workspace_for_new_thread = workspace_for_new_thread.clone();
                                 let path_list_for_new_thread = path_list_for_new_thread.clone();
@@ -2431,7 +2435,7 @@ impl Sidebar {
                         .icon_size(IconSize::Small)
                         .icon_color(Color::Error)
                         .style(ButtonStyle::Tinted(TintColor::Error))
-                        .tooltip(Tooltip::text("Stop Generation"))
+                        .tooltip(Tooltip::text(t(cx, "Stop Generation")))
                         .on_click({
                             let session_id = session_id_for_delete.clone();
                             cx.listener(move |this, _, _window, cx| {
@@ -2819,7 +2823,7 @@ impl Sidebar {
                                 this.child(
                                     IconButton::new("clear_filter", IconName::Close)
                                         .icon_size(IconSize::Small)
-                                        .tooltip(Tooltip::text("Clear Search"))
+                                        .tooltip(Tooltip::text(t(cx, "Clear Search")))
                                         .on_click(cx.listener(|this, _, window, cx| {
                                             this.reset_filter_editor_text(window, cx);
                                             this.update_entries(cx);

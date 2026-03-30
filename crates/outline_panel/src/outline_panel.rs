@@ -55,11 +55,15 @@ use ui::{
 };
 use util::{RangeExt, ResultExt, TryFutureExt, debug_panic, rel_path::RelPath};
 use workspace::{
-    OpenInTerminal, WeakItemHandle, Workspace,
+    OpenInTerminal, WeakItemHandle, Workspace, WorkspaceSettings, localized_string,
     dock::{DockPosition, Panel, PanelEvent},
     item::ItemHandle,
     searchable::{SearchEvent, SearchableItem},
 };
+
+fn t(cx: &App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 use worktree::{Entry, ProjectEntryId, WorktreeId};
 
 actions!(
@@ -1477,23 +1481,29 @@ impl OutlinePanel {
         let is_foldable = auto_fold_dirs && !is_root && self.is_foldable(&entry);
         let is_unfoldable = auto_fold_dirs && !is_root && self.is_unfoldable(&entry);
 
-        let context_menu = ContextMenu::build(window, cx, |menu, _, _| {
+        let context_menu = ContextMenu::build(window, cx, |menu, _, cx| {
             menu.context(self.focus_handle.clone())
                 .action(
-                    ui::utils::reveal_in_file_manager_label(false),
+                    if cfg!(target_os = "macos") {
+                        t(cx, "Reveal in Finder")
+                    } else if cfg!(target_os = "windows") {
+                        t(cx, "Reveal in File Explorer")
+                    } else {
+                        t(cx, "Reveal in File Manager")
+                    },
                     Box::new(RevealInFileManager),
                 )
-                .action("Open in Terminal", Box::new(OpenInTerminal))
+                .action(t(cx, "Open in Terminal"), Box::new(OpenInTerminal))
                 .when(is_unfoldable, |menu| {
-                    menu.action("Unfold Directory", Box::new(UnfoldDirectory))
+                    menu.action(t(cx, "Unfold Directory"), Box::new(UnfoldDirectory))
                 })
                 .when(is_foldable, |menu| {
-                    menu.action("Fold Directory", Box::new(FoldDirectory))
+                    menu.action(t(cx, "Fold Directory"), Box::new(FoldDirectory))
                 })
                 .separator()
-                .action("Copy Path", Box::new(zed_actions::workspace::CopyPath))
+                .action(t(cx, "Copy Path"), Box::new(zed_actions::workspace::CopyPath))
                 .action(
-                    "Copy Relative Path",
+                    t(cx, "Copy Relative Path"),
                     Box::new(zed_actions::workspace::CopyRelativePath),
                 )
         });

@@ -84,9 +84,14 @@ use ui::{
 use util::{ResultExt as _, debug_panic};
 use workspace::{
     CollaboratorId, DraggedSelection, DraggedTab, OpenResult, PathList, SerializedPathList,
-    ToggleWorkspaceSidebar, ToggleZoom, ToolbarItemView, Workspace, WorkspaceId,
+    ToggleWorkspaceSidebar, ToggleZoom, ToolbarItemView, Workspace, WorkspaceId, WorkspaceSettings,
     dock::{DockPosition, Panel, PanelEvent},
+    localized_string,
 };
+
+fn t(cx: &App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 use zed_actions::{
     DecreaseBufferFontSize, IncreaseBufferFontSize, ResetBufferFontSize,
     agent::{OpenAcpOnboardingModal, OpenSettings, ResetAgentZoom, ResetOnboarding},
@@ -3430,15 +3435,15 @@ impl AgentPanel {
             .with_handle(self.agent_panel_menu_handle.clone())
             .menu({
                 move |window, cx| {
-                    Some(ContextMenu::build(window, cx, |mut menu, _window, _| {
+                    Some(ContextMenu::build(window, cx, |mut menu, _window, cx| {
                         menu = menu.context(focus_handle.clone());
 
                         if thread_with_messages | text_thread_with_messages {
-                            menu = menu.header("Current Thread");
+                            menu = menu.header(t(cx, "Current Thread"));
 
                             if let Some(text_thread_view) = text_thread_view.as_ref() {
                                 menu = menu
-                                    .entry("Regenerate Thread Title", None, {
+                                    .entry(t(cx, "Regenerate Thread Title"), None, {
                                         let text_thread_view = text_thread_view.clone();
                                         move |_, cx| {
                                             Self::handle_regenerate_text_thread_title(
@@ -3452,7 +3457,7 @@ impl AgentPanel {
 
                             if let Some(conversation_view) = conversation_view.as_ref() {
                                 menu = menu
-                                    .entry("Regenerate Thread Title", None, {
+                                    .entry(t(cx, "Regenerate Thread Title"), None, {
                                         let conversation_view = conversation_view.clone();
                                         move |_, cx| {
                                             Self::handle_regenerate_thread_title(
@@ -3466,9 +3471,9 @@ impl AgentPanel {
                         }
 
                         menu = menu
-                            .header("MCP Servers")
+                            .header(t(cx, "MCP Servers"))
                             .action(
-                                "View Server Extensions",
+                                t(cx, "View Server Extensions"),
                                 Box::new(zed_actions::Extensions {
                                     category_filter: Some(
                                         zed_actions::ExtensionCategoryFilter::ContextServers,
@@ -3476,17 +3481,17 @@ impl AgentPanel {
                                     id: None,
                                 }),
                             )
-                            .action("Add Custom Server…", Box::new(AddContextServer))
+                            .action(t(cx, "Add Custom Server…"), Box::new(AddContextServer))
                             .separator()
-                            .action("Rules", Box::new(OpenRulesLibrary::default()))
-                            .action("Profiles", Box::new(ManageProfiles::default()))
-                            .action("Settings", Box::new(OpenSettings))
+                            .action(t(cx, "Rules"), Box::new(OpenRulesLibrary::default()))
+                            .action(t(cx, "Profiles"), Box::new(ManageProfiles::default()))
+                            .action(t(cx, "Settings"), Box::new(OpenSettings))
                             .separator()
-                            .action("Toggle Threads Sidebar", Box::new(ToggleWorkspaceSidebar))
+                            .action(t(cx, "Toggle Threads Sidebar"), Box::new(ToggleWorkspaceSidebar))
                             .action(full_screen_label, Box::new(ToggleZoom));
 
                         if has_auth_methods {
-                            menu = menu.action("Reauthenticate", Box::new(ReauthenticateAgent))
+                            menu = menu.action(t(cx, "Reauthenticate"), Box::new(ReauthenticateAgent))
                         }
 
                         menu

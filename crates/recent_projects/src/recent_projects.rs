@@ -47,8 +47,8 @@ use ui::{
 use util::{ResultExt, paths::PathExt};
 use workspace::{
     HistoryManager, ModalView, MultiWorkspace, OpenOptions, OpenVisible, PathList,
-    SerializedWorkspaceLocation, Workspace, WorkspaceDb, WorkspaceId,
-    notifications::DetachAndPromptErr, with_active_or_new_workspace,
+    SerializedWorkspaceLocation, Workspace, WorkspaceDb, WorkspaceId, WorkspaceSettings,
+    localized_string, notifications::DetachAndPromptErr, with_active_or_new_workspace,
 };
 use zed_actions::{OpenDevContainer, OpenRecent, OpenRemote};
 
@@ -945,8 +945,10 @@ impl PickerDelegate for RecentProjectsDelegate {
             !sibling_matches.is_empty()
         };
 
+        let language = WorkspaceSettings::get_global(cx).ui_language;
+
         if has_siblings_to_show {
-            entries.push(ProjectPickerEntry::Header("This Window".into()));
+            entries.push(ProjectPickerEntry::Header(localized_string(language, "This Window").into()));
 
             if is_empty_query {
                 for (id, (workspace_id, _, _, _)) in self.workspaces.iter().enumerate() {
@@ -973,7 +975,7 @@ impl PickerDelegate for RecentProjectsDelegate {
         };
 
         if has_recent_to_show {
-            entries.push(ProjectPickerEntry::Header("Recent Projects".into()));
+            entries.push(ProjectPickerEntry::Header(localized_string(language, "Recent Projects").into()));
 
             if is_empty_query {
                 for (id, (workspace_id, _, paths, _)) in self.workspaces.iter().enumerate() {

@@ -42,7 +42,8 @@ use ui::{
 
 use util::{ResultExt as _, paths::PathStyle, rel_path::RelPath};
 use workspace::{
-    AppState, MultiWorkspace, OpenOptions, OpenVisible, Workspace, client_side_decorations,
+    AppState, MultiWorkspace, OpenOptions, OpenVisible, Workspace, WorkspaceSettings,
+    client_side_decorations, localized_string,
 };
 use zed_actions::{OpenProjectSettings, OpenSettings, OpenSettingsAt};
 
@@ -942,7 +943,7 @@ impl SettingsPageItem {
 
         match self {
             SettingsPageItem::SectionHeader(header) => {
-                SettingsSectionHeader::new(SharedString::new_static(header)).into_any_element()
+                SettingsSectionHeader::new(localized_string(WorkspaceSettings::get_global(cx).ui_language, header)).into_any_element()
             }
             SettingsPageItem::SettingItem(setting_item) => {
                 let (field_with_padding, _) =
@@ -1153,6 +1154,8 @@ fn render_settings_item(
 ) -> Stateful<Div> {
     let (found_in_file, _) = setting_item.field.file_set_in(file.clone(), cx);
     let file_set_in = SettingsUiFile::from_settings(found_in_file.clone());
+    let language = WorkspaceSettings::get_global(cx).ui_language;
+    let t = |english: &'static str| localized_string(language, english);
 
     h_flex()
         .id(setting_item.title)
@@ -1168,7 +1171,7 @@ fn render_settings_item(
                     h_flex()
                         .w_full()
                         .gap_1()
-                        .child(Label::new(SharedString::new_static(setting_item.title)))
+                        .child(Label::new(t(setting_item.title)))
                         .when_some(
                             if sub_field {
                                 None
@@ -1182,7 +1185,7 @@ fn render_settings_item(
                                     IconButton::new("reset-to-default-btn", IconName::Undo)
                                         .icon_color(Color::Muted)
                                         .icon_size(IconSize::Small)
-                                        .tooltip(Tooltip::text("Reset to Default"))
+                                        .tooltip(Tooltip::text(t("Reset to Default")))
                                         .on_click({
                                             move |_, window, cx| {
                                                 reset_to_default(window, cx);
@@ -1194,12 +1197,13 @@ fn render_settings_item(
                         .when_some(
                             file_set_in.filter(|file_set_in| file_set_in != &file),
                             |this, file_set_in| {
+                                let file_name = settings_window
+                                    .display_name(&file_set_in)
+                                    .expect("File name should exist");
                                 this.child(
                                     Label::new(format!(
-                                        "—  Modified in {}",
-                                        settings_window
-                                            .display_name(&file_set_in)
-                                            .expect("File name should exist")
+                                        "—  {}",
+                                        t("Modified in").replace("{}", &file_name)
                                     ))
                                     .color(Color::Muted)
                                     .size(LabelSize::Small),
@@ -1208,7 +1212,7 @@ fn render_settings_item(
                         ),
                 )
                 .child(
-                    Label::new(SharedString::new_static(setting_item.description))
+                    Label::new(t(setting_item.description))
                         .size(LabelSize::Small)
                         .color(Color::Muted),
                 ),
@@ -1230,6 +1234,7 @@ fn render_settings_item_link(
     sub_field: bool,
     cx: &mut Context<'_, SettingsWindow>,
 ) -> impl IntoElement {
+    let t = |english: &'static str| localized_string(WorkspaceSettings::get_global(cx).ui_language, english);
     let clipboard_has_link = cx
         .read_from_clipboard()
         .and_then(|entry| entry.text())
@@ -1260,7 +1265,7 @@ fn render_settings_item_link(
                 .icon_color(link_icon_color)
                 .icon_size(IconSize::Small)
                 .shape(IconButtonShape::Square)
-                .tooltip(Tooltip::text("Copy Link"))
+                .tooltip(Tooltip::text(t("Copy Link")))
                 .when_some(json_path, |this, path| {
                     this.on_click(cx.listener(move |_, _, _, cx| {
                         let link = format!("zed://settings/{}", path);
@@ -2388,7 +2393,7 @@ impl SettingsWindow {
                                         }),
                                     )
                                     .style(DropdownStyle::Subtle)
-                                    .trigger_tooltip(Tooltip::text("View Other Projects"))
+                                    .trigger_tooltip(Tooltip::text(localized_string(WorkspaceSettings::get_global(cx).ui_language, "View Other Projects")))
                                     .trigger_icon(IconName::ChevronDown)
                                     .attach(gpui::Corner::BottomLeft)
                                     .offset(gpui::Point {
@@ -2897,15 +2902,16 @@ impl SettingsWindow {
 
     fn render_no_results(&self, cx: &App) -> impl IntoElement {
         let search_query = self.search_bar.read(cx).text(cx);
+        let t = |english: &'static str| localized_string(WorkspaceSettings::get_global(cx).ui_language, english);
 
         v_flex()
             .size_full()
             .items_center()
             .justify_center()
             .gap_1()
-            .child(Label::new("No Results"))
+            .child(Label::new(t("No Results")))
             .child(
-                Label::new(format!("No settings match \"{}\"", search_query))
+                Label::new(format!("{} \"{}\"", t("No settings match"), search_query))
                     .size(LabelSize::Small)
                     .color(Color::Muted),
             )

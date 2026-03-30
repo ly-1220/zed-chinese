@@ -218,9 +218,14 @@ use workspace::{
     OpenTerminal, Pane, RestoreOnStartupBehavior, SERIALIZATION_THROTTLE_TIME, SplitDirection,
     TabBarSettings, Toast, ViewId, Workspace, WorkspaceId, WorkspaceSettings,
     item::{ItemBufferKind, ItemHandle, PreviewTabsSettings, SaveOptions},
+    localized_string,
     notifications::{DetachAndPromptErr, NotificationId, NotifyTaskExt},
     searchable::SearchEvent,
 };
+
+fn t(cx: &App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 pub use zed_actions::editor::RevealInFileManager;
 use zed_actions::editor::{MoveDown, MoveUp};
 
@@ -9009,52 +9014,60 @@ impl Editor {
             .breakpoint_at_row(row, window, cx)
             .map(|(anchor, bp)| (anchor, Arc::from(bp)));
 
-        let log_breakpoint_msg = if breakpoint.as_ref().is_some_and(|bp| bp.1.message.is_some()) {
-            "Edit Log Breakpoint"
-        } else {
-            "Set Log Breakpoint"
-        };
+        let has_log_message = breakpoint.as_ref().is_some_and(|bp| bp.1.message.is_some());
 
-        let condition_breakpoint_msg = if breakpoint
+        let has_condition = breakpoint
             .as_ref()
-            .is_some_and(|bp| bp.1.condition.is_some())
-        {
-            "Edit Condition Breakpoint"
-        } else {
-            "Set Condition Breakpoint"
-        };
+            .is_some_and(|bp| bp.1.condition.is_some());
 
-        let hit_condition_breakpoint_msg = if breakpoint
+        let has_hit_condition = breakpoint
             .as_ref()
-            .is_some_and(|bp| bp.1.hit_condition.is_some())
-        {
-            "Edit Hit Condition Breakpoint"
-        } else {
-            "Set Hit Condition Breakpoint"
-        };
+            .is_some_and(|bp| bp.1.hit_condition.is_some());
 
-        let set_breakpoint_msg = if breakpoint.as_ref().is_some() {
-            "Unset Breakpoint"
-        } else {
-            "Set Breakpoint"
-        };
+        let has_breakpoint = breakpoint.as_ref().is_some();
 
         let run_to_cursor = window.is_action_available(&RunToCursor, cx);
 
-        let toggle_state_msg = breakpoint.as_ref().map_or(None, |bp| match bp.1.state {
-            BreakpointState::Enabled => Some("Disable"),
-            BreakpointState::Disabled => Some("Enable"),
-        });
+        let toggle_state = breakpoint.as_ref().map(|bp| bp.1.state);
 
         let (anchor, breakpoint) =
             breakpoint.unwrap_or_else(|| (anchor, Arc::new(Breakpoint::new_standard())));
 
-        ui::ContextMenu::build(window, cx, |menu, _, _cx| {
+        ui::ContextMenu::build(window, cx, |menu, _, cx| {
+            let log_breakpoint_msg = if has_log_message {
+                t(cx, "Edit Log Breakpoint")
+            } else {
+                t(cx, "Set Log Breakpoint")
+            };
+
+            let condition_breakpoint_msg = if has_condition {
+                t(cx, "Edit Condition Breakpoint")
+            } else {
+                t(cx, "Set Condition Breakpoint")
+            };
+
+            let hit_condition_breakpoint_msg = if has_hit_condition {
+                t(cx, "Edit Hit Condition Breakpoint")
+            } else {
+                t(cx, "Set Hit Condition Breakpoint")
+            };
+
+            let set_breakpoint_msg = if has_breakpoint {
+                t(cx, "Unset Breakpoint")
+            } else {
+                t(cx, "Set Breakpoint")
+            };
+
+            let toggle_state_msg = toggle_state.map(|state| match state {
+                BreakpointState::Enabled => t(cx, "Disable"),
+                BreakpointState::Disabled => t(cx, "Enable"),
+            });
+
             menu.on_blur_subscription(Subscription::new(|| {}))
                 .context(focus_handle)
                 .when(run_to_cursor, |this| {
                     let weak_editor = weak_editor.clone();
-                    this.entry("Run to Cursor", None, move |window, cx| {
+                    this.entry(t(cx, "Run to Cursor"), None, move |window, cx| {
                         weak_editor
                             .update(cx, |editor, cx| {
                                 editor.change_selections(

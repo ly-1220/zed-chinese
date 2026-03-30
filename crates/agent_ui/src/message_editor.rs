@@ -37,8 +37,12 @@ use theme_settings::ThemeSettings;
 use ui::{ContextMenu, Disclosure, ElevationIndex, prelude::*};
 use util::paths::PathStyle;
 use util::{ResultExt, debug_panic};
-use workspace::{CollaboratorId, Workspace};
+use workspace::{CollaboratorId, Workspace, WorkspaceSettings, localized_string};
 use zed_actions::agent::{Chat, PasteRaw};
+
+fn t(cx: &gpui::App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 
 #[derive(Default)]
 pub struct SessionCapabilities {
@@ -435,15 +439,15 @@ impl MessageEditor {
             editor.set_custom_context_menu(|editor, _point, window, cx| {
                 let has_selection = editor.has_non_empty_selection(&editor.display_snapshot(cx));
 
-                Some(ContextMenu::build(window, cx, |menu, _, _| {
-                    menu.action("Cut", Box::new(editor::actions::Cut))
+                Some(ContextMenu::build(window, cx, |menu, _, cx| {
+                    menu.action(t(cx, "Cut"), Box::new(editor::actions::Cut))
                         .action_disabled_when(
                             !has_selection,
-                            "Copy",
+                            t(cx, "Copy"),
                             Box::new(editor::actions::Copy),
                         )
-                        .action("Paste", Box::new(editor::actions::Paste))
-                        .action("Paste as Plain Text", Box::new(PasteRaw))
+                        .action(t(cx, "Paste"), Box::new(editor::actions::Paste))
+                        .action(t(cx, "Paste as Plain Text"), Box::new(PasteRaw))
                 }))
             });
 

@@ -18,8 +18,14 @@ use project::debugger::{
     session::{Session, SessionEvent, Watcher},
 };
 use std::{collections::HashMap, ops::Range, sync::Arc};
+use settings::Settings;
 use ui::{ContextMenu, ListItem, ScrollAxes, ScrollableHandle, Tooltip, WithScrollbar, prelude::*};
 use util::{debug_panic, maybe};
+use workspace::{WorkspaceSettings, localized_string};
+
+fn t(cx: &gpui::App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 
 static INDENT_STEP_SIZE: Pixels = px(10.0);
 
@@ -702,17 +708,17 @@ impl VariableList {
                 None
             };
             cx.update(|window, cx| {
-                let context_menu = ContextMenu::build(window, cx, |menu, _, _| {
+                let context_menu = ContextMenu::build(window, cx, |menu, _, cx| {
                     menu.when_some(entry.as_variable(), |menu, _| {
-                        menu.action("Copy Name", CopyVariableName.boxed_clone())
-                            .action("Copy Value", CopyVariableValue.boxed_clone())
+                        menu.action(t(cx, "Copy Name"), CopyVariableName.boxed_clone())
+                            .action(t(cx, "Copy Value"), CopyVariableValue.boxed_clone())
                             .when(supports_set_variable, |menu| {
-                                menu.action("Edit Value", EditVariable.boxed_clone())
+                                menu.action(t(cx, "Edit Value"), EditVariable.boxed_clone())
                             })
                             .when(supports_go_to_memory, |menu| {
-                                menu.action("Go To Memory", GoToMemory.boxed_clone())
+                                menu.action(t(cx, "Go To Memory"), GoToMemory.boxed_clone())
                             })
-                            .action("Watch Variable", AddWatch.boxed_clone())
+                            .action(t(cx, "Watch Variable"), AddWatch.boxed_clone())
                             .when_some(can_toggle_data_breakpoint, |mut menu, data_info| {
                                 menu = menu.separator();
                                 if let Some(access_types) = data_info.access_types {
@@ -745,12 +751,12 @@ impl VariableList {
                             })
                     })
                     .when(entry.as_watcher().is_some(), |menu| {
-                        menu.action("Copy Name", CopyVariableName.boxed_clone())
-                            .action("Copy Value", CopyVariableValue.boxed_clone())
+                        menu.action(t(cx, "Copy Name"), CopyVariableName.boxed_clone())
+                            .action(t(cx, "Copy Value"), CopyVariableValue.boxed_clone())
                             .when(supports_set_variable, |menu| {
-                                menu.action("Edit Value", EditVariable.boxed_clone())
+                                menu.action(t(cx, "Edit Value"), EditVariable.boxed_clone())
                             })
-                            .action("Remove Watch", RemoveWatch.boxed_clone())
+                            .action(t(cx, "Remove Watch"), RemoveWatch.boxed_clone())
                     })
                     .context(focus_handle.clone())
                 });

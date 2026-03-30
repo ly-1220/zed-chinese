@@ -53,15 +53,19 @@ use ui::{
 use util::ResultExt;
 use workspace::{
     CloseActiveItem, DraggedSelection, DraggedTab, NewCenterTerminal, NewTerminal, Pane,
-    ToolbarItemLocation, Workspace, WorkspaceId, delete_unloaded_items,
+    ToolbarItemLocation, Workspace, WorkspaceId, WorkspaceSettings, delete_unloaded_items,
     item::{
         HighlightedText, Item, ItemEvent, SerializableItem, TabContentParams, TabTooltipContent,
     },
-    register_serializable_item,
+    localized_string, register_serializable_item,
     searchable::{
         Direction, SearchEvent, SearchOptions, SearchToken, SearchableItem, SearchableItemHandle,
     },
 };
+
+fn t(cx: &App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 use zed_actions::{agent::AddSelectionToThread, assistant::InlineAssist};
 
 struct ImeState {
@@ -506,24 +510,24 @@ impl TerminalView {
             .selection_text
             .as_ref()
             .is_some_and(|text| !text.is_empty());
-        let context_menu = ContextMenu::build(window, cx, |menu, _, _| {
+        let context_menu = ContextMenu::build(window, cx, |menu, _, cx| {
             menu.context(self.focus_handle.clone())
-                .action("New Terminal", Box::new(NewTerminal::default()))
+                .action(t(cx, "New Terminal"), Box::new(NewTerminal::default()))
                 .separator()
-                .action("Copy", Box::new(Copy))
-                .action("Paste", Box::new(Paste))
-                .action("Select All", Box::new(SelectAll))
-                .action("Clear", Box::new(Clear))
+                .action(t(cx, "Copy"), Box::new(Copy))
+                .action(t(cx, "Paste"), Box::new(Paste))
+                .action(t(cx, "Select All"), Box::new(SelectAll))
+                .action(t(cx, "Clear"), Box::new(Clear))
                 .when(assistant_enabled, |menu| {
                     menu.separator()
-                        .action("Inline Assist", Box::new(InlineAssist::default()))
+                        .action(t(cx, "Inline Assist"), Box::new(InlineAssist::default()))
                         .when(has_selection, |menu| {
-                            menu.action("Add to Agent Thread", Box::new(AddSelectionToThread))
+                            menu.action(t(cx, "Add to Agent Thread"), Box::new(AddSelectionToThread))
                         })
                 })
                 .separator()
                 .action(
-                    "Close Terminal Tab",
+                    t(cx, "Close Terminal Tab"),
                     Box::new(CloseActiveItem {
                         save_intent: None,
                         close_pinned: true,

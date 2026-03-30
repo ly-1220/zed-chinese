@@ -31,11 +31,15 @@ use workspace::{
     ActivatePaneUp, ActivatePreviousPane, DraggedTab, ItemId, MoveItemToPane,
     MoveItemToPaneInDirection, MovePaneDown, MovePaneLeft, MovePaneRight, MovePaneUp, Pane,
     PaneGroup, SplitDirection, SplitDown, SplitLeft, SplitMode, SplitRight, SplitUp, SwapPaneDown,
-    SwapPaneLeft, SwapPaneRight, SwapPaneUp, ToggleZoom, Workspace,
+    SwapPaneLeft, SwapPaneRight, SwapPaneUp, ToggleZoom, Workspace, WorkspaceSettings,
     dock::{DockPosition, Panel, PanelEvent, PanelHandle},
     item::SerializableItem,
-    move_active_item, pane,
+    localized_string, move_active_item, pane,
 };
+
+fn t(cx: &App, english: &'static str) -> &'static str {
+    localized_string(WorkspaceSettings::get_global(cx).ui_language, english)
+}
 
 use anyhow::{Result, anyhow};
 use zed_actions::assistant::InlineAssist;
@@ -164,17 +168,17 @@ impl TerminalPanel {
                             .with_handle(pane.new_item_context_menu_handle.clone())
                             .menu(move |window, cx| {
                                 let focus_handle = focus_handle.clone();
-                                let menu = ContextMenu::build(window, cx, |menu, _, _| {
+                                let menu = ContextMenu::build(window, cx, |menu, _, cx| {
                                     menu.context(focus_handle.clone())
                                         .action(
-                                            "New Terminal",
+                                            t(cx, "New Terminal"),
                                             workspace::NewTerminal::default().boxed_clone(),
                                         )
                                         // We want the focus to go back to terminal panel once task modal is dismissed,
                                         // hence we focus that first. Otherwise, we'd end up without a focused element, as
                                         // context menu will be gone the moment we spawn the modal.
                                         .action(
-                                            "Spawn Task",
+                                            t(cx, "Spawn Task"),
                                             zed_actions::Spawn::modal().boxed_clone(),
                                         )
                                 });
@@ -194,15 +198,15 @@ impl TerminalPanel {
                             .with_handle(pane.split_item_context_menu_handle.clone())
                             .menu({
                                 move |window, cx| {
-                                    ContextMenu::build(window, cx, |menu, _, _| {
+                                    ContextMenu::build(window, cx, |menu, _, cx| {
                                         menu.when_some(
                                             split_context.clone(),
                                             |menu, split_context| menu.context(split_context),
                                         )
-                                        .action("Split Right", SplitRight::default().boxed_clone())
-                                        .action("Split Left", SplitLeft::default().boxed_clone())
-                                        .action("Split Up", SplitUp::default().boxed_clone())
-                                        .action("Split Down", SplitDown::default().boxed_clone())
+                                        .action(t(cx, "Split Right"), SplitRight::default().boxed_clone())
+                                        .action(t(cx, "Split Left"), SplitLeft::default().boxed_clone())
+                                        .action(t(cx, "Split Up"), SplitUp::default().boxed_clone())
+                                        .action(t(cx, "Split Down"), SplitDown::default().boxed_clone())
                                     })
                                     .into()
                                 }
@@ -1305,11 +1309,11 @@ impl Render for FailedToSpawnTerminal {
                     .icon_size(IconSize::XSmall),
             )
             .menu(move |window, cx| {
-                Some(ContextMenu::build(window, cx, |context_menu, _, _| {
+                Some(ContextMenu::build(window, cx, |context_menu, _, cx| {
                     context_menu
-                        .action("Open Settings", zed_actions::OpenSettings.boxed_clone())
+                        .action(t(cx, "Open Settings"), zed_actions::OpenSettings.boxed_clone())
                         .action(
-                            "Edit settings.json",
+                            t(cx, "Open Settings File"),
                             zed_actions::OpenSettingsFile.boxed_clone(),
                         )
                 }))
